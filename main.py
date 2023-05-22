@@ -1,6 +1,7 @@
 @namespace
 class SpriteKind:
     sword = SpriteKind.create()
+    shield = SpriteKind.create()
 
 # variables
 attacking = False
@@ -15,6 +16,9 @@ scene.camera_follow_sprite(me)
 sword = sprites.create(assets.image("sword right"), SpriteKind.sword)
 sword.set_flag(SpriteFlag.GHOST_THROUGH_WALLS, True)
 sword.scale = 1.5
+shield = sprites.create(assets.image("shield right"), SpriteKind.shield)
+shield.set_flag(SpriteFlag.INVISIBLE, True)
+shield.set_flag(SpriteFlag.GHOST_THROUGH_SPRITES, True)
 
 def load_level():
     tiles.set_tilemap(assets.tilemap("level1"))
@@ -35,9 +39,42 @@ def spawn_enemies():
 game.on_update_interval(2000, spawn_enemies)
           
 def enemy_collision(me, enemy):
+    if me.overlaps_with(shield):
+        return
     info.change_life_by(-1)
     pause(2000)
 sprites.on_overlap(SpriteKind.player, SpriteKind.enemy, enemy_collision)
+
+def trigger_defending():
+    sword.set_flag(SpriteFlag.INVISIBLE, True)
+    shield.set_flag(SpriteFlag.INVISIBLE, False)
+    shield.set_flag(SpriteFlag.GHOST_THROUGH_SPRITES, False)
+    pause(500)
+    sword.set_flag(SpriteFlag.INVISIBLE, False)
+    shield.set_flag(SpriteFlag.INVISIBLE, True)
+    shield.set_flag(SpriteFlag.GHOST_THROUGH_SPRITES, True)
+
+def defend():
+    timer.background(trigger_defending)
+    shield.set_position(me.x, me.y)
+    if me.image.equals(assets.image("me left")):
+        shield.set_image(assets.image("shield left"))
+    else:
+        shield.set_image(assets.image("shield right"))
+controller.B.on_event(ControllerButtonEvent.PRESSED, defend)
+
+def block(shield, enemy):
+    tilesAdvanced.follow_using_pathfinding(enemy, me, 0)
+    if shield.image.equals(assets.image("shield left")):
+        x_vel = -100
+    else:
+        x_vel = 100
+    for i in range(10):
+        enemy.vx = x_vel
+        pause(10)
+    pause(500)
+    tilesAdvanced.follow_using_pathfinding(enemy, me, 50)
+sprites.on_overlap(SpriteKind.shield, SpriteKind.enemy, block)
 
 def hit_enemy(sword, enemy):
     if attacking:
@@ -49,7 +86,7 @@ def attack():
     timer.background(trigger_attacking)
     if me.image.equals(assets.image("me left")):
         animation.run_image_animation(sword, assets.animation("swing left"), 50, False)
-    else: 
+    else:
         animation.run_image_animation(sword, assets.animation("swing right"), 50, False)
 
 def throttle_attack():

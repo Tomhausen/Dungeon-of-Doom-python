@@ -1,5 +1,6 @@
 namespace SpriteKind {
     export const sword = SpriteKind.create()
+    export const shield = SpriteKind.create()
 }
 
 //  variables
@@ -14,6 +15,9 @@ scene.cameraFollowSprite(me)
 let sword = sprites.create(assets.image`sword right`, SpriteKind.sword)
 sword.setFlag(SpriteFlag.GhostThroughWalls, true)
 sword.scale = 1.5
+let shield = sprites.create(assets.image`shield right`, SpriteKind.shield)
+shield.setFlag(SpriteFlag.Invisible, true)
+shield.setFlag(SpriteFlag.GhostThroughSprites, true)
 function load_level() {
     tiles.setTilemap(assets.tilemap`level1`)
     tiles.placeOnRandomTile(me, assets.tile`player spawn`)
@@ -36,8 +40,46 @@ game.onUpdateInterval(2000, function spawn_enemies() {
     animation.runImageAnimation(enemy, assets.animation`bat right`, 100, true)
 })
 sprites.onOverlap(SpriteKind.Player, SpriteKind.Enemy, function enemy_collision(me: Sprite, enemy: Sprite) {
+    if (me.overlapsWith(shield)) {
+        return
+    }
+    
     info.changeLifeBy(-1)
     pause(2000)
+})
+controller.B.onEvent(ControllerButtonEvent.Pressed, function defend() {
+    timer.background(function trigger_defending() {
+        sword.setFlag(SpriteFlag.Invisible, true)
+        shield.setFlag(SpriteFlag.Invisible, false)
+        shield.setFlag(SpriteFlag.GhostThroughSprites, false)
+        pause(500)
+        sword.setFlag(SpriteFlag.Invisible, false)
+        shield.setFlag(SpriteFlag.Invisible, true)
+        shield.setFlag(SpriteFlag.GhostThroughSprites, true)
+    })
+    shield.setPosition(me.x, me.y)
+    if (me.image.equals(assets.image`me left`)) {
+        shield.setImage(assets.image`shield left`)
+    } else {
+        shield.setImage(assets.image`shield right`)
+    }
+    
+})
+sprites.onOverlap(SpriteKind.shield, SpriteKind.Enemy, function block(shield: Sprite, enemy: Sprite) {
+    let x_vel: number;
+    tilesAdvanced.followUsingPathfinding(enemy, me, 0)
+    if (shield.image.equals(assets.image`shield left`)) {
+        x_vel = -100
+    } else {
+        x_vel = 100
+    }
+    
+    for (let i = 0; i < 10; i++) {
+        enemy.vx = x_vel
+        pause(10)
+    }
+    pause(500)
+    tilesAdvanced.followUsingPathfinding(enemy, me, 50)
 })
 sprites.onOverlap(SpriteKind.sword, SpriteKind.Enemy, function hit_enemy(sword: Sprite, enemy: Sprite) {
     if (attacking) {
