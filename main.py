@@ -7,6 +7,8 @@ class SpriteKind:
 attacking = False
 gravity = 8
 jump_count = 2
+frame = 0
+tiles_to_animate: List[tiles.Location] = []
 info.set_score(0)
 info.set_life(3)
 
@@ -21,10 +23,22 @@ shield.set_flag(SpriteFlag.INVISIBLE, True)
 shield.set_flag(SpriteFlag.GHOST_THROUGH_SPRITES, True)
 
 def load_level():
+    global tiles_to_animate
     tiles.set_tilemap(assets.tilemap("level1"))
     tiles.place_on_random_tile(me, assets.tile("player spawn"))
     tiles.set_tile_at(me.tilemap_location(), assets.tile("wall"))
+    tiles_to_animate = tiles.get_tiles_by_type(assets.tile("torch"))
 load_level()
+
+def flicker():
+    global frame
+    anim = assets.animation("torch flicker")
+    for tile in tiles_to_animate:
+        tiles.set_tile_at(tile, anim[frame])
+    frame += 1
+    if frame == anim.length - 1:
+        frame = 0
+game.on_update_interval(200, flicker)
 
 def position_enemy(enemy):
     tiles.place_on_random_tile(enemy, assets.tile("wall"))

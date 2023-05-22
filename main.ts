@@ -7,6 +7,8 @@ namespace SpriteKind {
 let attacking = false
 let gravity = 8
 let jump_count = 2
+let frame = 0
+let tiles_to_animate : tiles.Location[] = []
 info.setScore(0)
 info.setLife(3)
 //  sprites
@@ -19,12 +21,26 @@ let shield = sprites.create(assets.image`shield right`, SpriteKind.shield)
 shield.setFlag(SpriteFlag.Invisible, true)
 shield.setFlag(SpriteFlag.GhostThroughSprites, true)
 function load_level() {
+    
     tiles.setTilemap(assets.tilemap`level1`)
     tiles.placeOnRandomTile(me, assets.tile`player spawn`)
     tiles.setTileAt(me.tilemapLocation(), assets.tile`wall`)
+    tiles_to_animate = tiles.getTilesByType(assets.tile`torch`)
 }
 
 load_level()
+game.onUpdateInterval(200, function flicker() {
+    
+    let anim = assets.animation`torch flicker`
+    for (let tile of tiles_to_animate) {
+        tiles.setTileAt(tile, anim[frame])
+    }
+    frame += 1
+    if (frame == anim.length - 1) {
+        frame = 0
+    }
+    
+})
 function position_enemy(enemy: any) {
     tiles.placeOnRandomTile(enemy, assets.tile`wall`)
     if (spriteutils.distanceBetween(enemy, me) < 180) {
