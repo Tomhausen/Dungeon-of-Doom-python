@@ -36,7 +36,7 @@ def flicker():
     for tile in tiles_to_animate:
         tiles.set_tile_at(tile, anim[frame])
     frame += 1
-    if frame == anim.length - 1:
+    if frame == len(anim) - 1:
         frame = 0
 game.on_update_interval(200, flicker)
 
