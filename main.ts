@@ -20,6 +20,8 @@ sword.scale = 1.5
 let shield = sprites.create(assets.image`shield right`, SpriteKind.shield)
 shield.setFlag(SpriteFlag.Invisible, true)
 shield.setFlag(SpriteFlag.GhostThroughSprites, true)
+let dash = sprites.create(assets.image`dash right`)
+dash.setFlag(SpriteFlag.Invisible, true)
 function load_level() {
     
     tiles.setTilemap(assets.tilemap`level1`)
@@ -119,6 +121,29 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function throttle_attack() {
         }
         
     })
+})
+function dash_anim() {
+    dash.setFlag(SpriteFlag.Invisible, false)
+    while (Math.abs(me.vx) > 100) {
+        dash.setPosition(me.x, me.y)
+        if (me.vx > 0) {
+            dash.setImage(assets.image`dash right`)
+        } else {
+            dash.setImage(assets.image`dash left`)
+        }
+        
+        pause(10)
+    }
+    dash.setFlag(SpriteFlag.Invisible, true)
+}
+
+controller.combos.attachCombo("ll", function dash_left() {
+    me.vx = -300
+    timer.background(dash_anim)
+})
+controller.combos.attachCombo("rr", function dash_right() {
+    me.vx = 300
+    timer.background(dash_anim)
 })
 function x_movement() {
     if (controller.left.isPressed()) {

@@ -21,6 +21,8 @@ sword.scale = 1.5
 shield = sprites.create(assets.image("shield right"), SpriteKind.shield)
 shield.set_flag(SpriteFlag.INVISIBLE, True)
 shield.set_flag(SpriteFlag.GHOST_THROUGH_SPRITES, True)
+dash = sprites.create(assets.image("dash right"))
+dash.set_flag(SpriteFlag.INVISIBLE, True)
 
 def load_level():
     global tiles_to_animate
@@ -112,6 +114,27 @@ def trigger_attacking():
     attacking = True
     pause(250)
     attacking = False
+
+def dash_anim():
+    dash.set_flag(SpriteFlag.INVISIBLE, False)
+    while Math.abs(me.vx) > 100:
+        dash.set_position(me.x, me.y)
+        if me.vx > 0:
+            dash.set_image(assets.image("dash right"))
+        else:
+            dash.set_image(assets.image("dash left"))
+        pause(10)
+    dash.set_flag(SpriteFlag.INVISIBLE, True)
+
+def dash_left():
+    me.vx = -300
+    timer.background(dash_anim)
+controller.combos.attach_combo("ll", dash_left)
+
+def dash_right():
+    me.vx = 300
+    timer.background(dash_anim)
+controller.combos.attach_combo("rr", dash_right)
 
 def x_movement():
     if controller.left.is_pressed():
